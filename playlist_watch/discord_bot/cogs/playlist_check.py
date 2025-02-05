@@ -8,25 +8,27 @@ logger = getLogger(__name__)
 
 test_channel_id = 1335153750637281300
 
+time_delay_hours = 1
+
 class PlaylistCheck(commands.Cog):
-    def __init__(self, bot, channel_id: int = test_channel_id):
+    def __init__(self, bot):
         self.bot = bot
-        self.channel_id = channel_id
         self.check_playlist.start()
 
-    @tasks.loop(seconds=60*60)
+    @tasks.loop(seconds=60*60*time_delay_hours)
     async def check_playlist(self):
         playlists = get_playlists()
         for playlist_id, playlist_info in playlists.items():
-            channel = playlist_info.get("channel_id", None)
+            channel_id = playlist_info.get("channel_id", None)
+            channel = self.bot.get_channel(channel_id)
             if not channel:
-                logger.error(f"Channel not found: {self.channel_id}")
-                raise ValueError(f"Channel not found: {self.channel_id}")
+                logger.error(f"Channel not found: {channel_id}")
+                raise ValueError(f"Channel not found: {channel_id}")    
             logger.info(f"Checking playlist {playlist_info["name"]}...")
-            recent_tracks = get_recent_tracks(playlist_id=playlist_id)
+            recent_tracks = get_recent_tracks(playlist_id=playlist_id, time_delay_hours=time_delay_hours)
             if recent_tracks == "":
                 logger.info(f"No recent tracks found in playlist {playlist_info["name"]}...")
-                return
+                continue
             logger.info("Sending recent tracks message...")
             await self.send_long_message(channel, recent_tracks)
 
