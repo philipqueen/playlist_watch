@@ -1,9 +1,11 @@
 import discord
 from discord.ext import commands
-from logging import getLogger
+import logging
 import os
 
-logger = getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
+logger = logging.getLogger(__name__)
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -16,7 +18,11 @@ async def on_ready():
 
 async def load_extensions():
     await bot.load_extension('cogs.hello')
+    await bot.load_extension('cogs.check_permissions')
     await bot.load_extension('cogs.playlist_check')
+    await bot.load_extension('cogs.add_playlist')
+    await bot.load_extension('cogs.remove_playlist')
+    await bot.load_extension('cogs.add_channel')
 
 async def main():
     async with bot:

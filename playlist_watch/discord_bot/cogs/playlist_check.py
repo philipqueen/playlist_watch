@@ -2,6 +2,7 @@ from discord.ext import commands, tasks
 from logging import getLogger
 
 from playlist_watch.spotify.get_playlist_tracks import get_recent_tracks
+from playlist_watch.system.manage_playlists_json import get_playlists
 
 logger = getLogger(__name__)
 
@@ -15,17 +16,19 @@ class PlaylistCheck(commands.Cog):
 
     @tasks.loop(seconds=60*60)
     async def check_playlist(self):
-        channel = self.bot.get_channel(self.channel_id)
-        if not channel:
-            logger.error(f"Channel not found: {self.channel_id}")
-            raise ValueError(f"Channel not found: {self.channel_id}")
-        logger.info("Checking playlist...")
-        recent_tracks = get_recent_tracks()
-        if recent_tracks == "":
-            logger.info("No recent tracks found.")
-            return
-        logger.info("Sending recent tracks message...")
-        await self.send_long_message(channel, recent_tracks)
+        playlists = get_playlists()
+        for playlist_id, playlist_info in playlists.items():
+            channel = playlist_info.get("channel_id", None)
+            if not channel:
+                logger.error(f"Channel not found: {self.channel_id}")
+                raise ValueError(f"Channel not found: {self.channel_id}")
+            logger.info(f"Checking playlist {playlist_info["name"]}...")
+            recent_tracks = get_recent_tracks(playlist_id=playlist_id)
+            if recent_tracks == "":
+                logger.info(f"No recent tracks found in playlist {playlist_info["name"]}...")
+                return
+            logger.info("Sending recent tracks message...")
+            await self.send_long_message(channel, recent_tracks)
 
     @check_playlist.before_loop
     async def before_my_task(self):
