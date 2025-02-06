@@ -25,7 +25,7 @@ class PlaylistCheck(commands.Cog):
                 logger.error(f"Channel not found: {channel_id}")
                 raise ValueError(f"Channel not found: {channel_id}")    
             logger.info(f"Checking playlist {playlist_info["name"]}...")
-            recent_tracks = get_recent_tracks(playlist_id=playlist_id, time_delay_hours=time_delay_hours)
+            recent_tracks = await get_recent_tracks(playlist_id=playlist_id, time_delay_hours=time_delay_hours)
             if recent_tracks == "":
                 logger.info(f"No recent tracks found in playlist {playlist_info["name"]}...")
                 continue
