@@ -2,10 +2,12 @@ import json
 import os
 import logging
 
+from pathlib import Path
+
 logger = logging.getLogger(__name__)
 
 playlists_file_name = "playlists.json"
-playlists_file_path = f"playlist_watch/{playlists_file_name}"
+playlists_file_path = f"{Path(__file__).parent}/{playlists_file_name}"
 
 def get_playlists() -> dict:
     """
