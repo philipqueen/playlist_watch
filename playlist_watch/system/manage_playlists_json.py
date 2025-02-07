@@ -1,5 +1,8 @@
 import json
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 playlists_file_name = "playlists.json"
 playlists_file_path = f"playlist_watch/{playlists_file_name}"
@@ -11,12 +14,20 @@ def get_playlists() -> dict:
     Key: playlist ID
     Value: dictionary with keys "name" and "channel_id"
     """
+    logger.info(f"Loading playlists from {playlists_file_path}")
     if not os.path.exists(playlists_file_path) or os.path.getsize(playlists_file_path) == 0:
-        # Initialize the file with an empty JSON object
+        logger.info("No playlists file found, creating new one...")
         with open(playlists_file_path, 'w') as f:
             json.dump({}, f)
-    with open(playlists_file_path, 'r') as f:
-        playlists = json.load(f)
+    try:
+        with open(playlists_file_path, 'r') as f:
+            playlists = json.load(f)
+    except json.JSONDecodeError:
+        logger.error(f"Error decoding JSON in {playlists_file_path}")
+        raise
+    except FileNotFoundError:
+        logger.error(f"File not found: {playlists_file_path}")
+        raise
     return playlists
 
 def add_playlist(playlist_id: str, playlist_name: str, channel_id: int) -> None:

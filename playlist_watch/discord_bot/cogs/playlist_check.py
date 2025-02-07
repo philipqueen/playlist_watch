@@ -17,6 +17,7 @@ class PlaylistCheck(commands.Cog):
 
     @tasks.loop(seconds=60*60*time_delay_hours)
     async def check_playlist(self):
+        logger.info("Checking playlists...")
         playlists = get_playlists()
         for playlist_id, playlist_info in playlists.items():
             channel_id = playlist_info.get("channel_id", None)
