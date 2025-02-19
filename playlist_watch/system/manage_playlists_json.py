@@ -38,6 +38,13 @@ def add_playlist(playlist_id: str, playlist_name: str, channel_id: int) -> None:
     with open(playlists_file_path, 'w') as f:
         json.dump(playlists, f)
 
+def update_channel_id(playlist_id: str, channel_id: int) -> None:
+    playlists = get_playlists()
+    if playlist_id in playlists:
+        playlists[playlist_id]["channel_id"] = channel_id
+    else:
+        logger.error(f"Playlist ID '{playlist_id}' not found.")
+
 def remove_playlist_by_id(playlist_id: str) -> None:
     playlists = get_playlists()
     if playlist_id in playlists:

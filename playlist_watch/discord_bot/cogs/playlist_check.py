@@ -1,8 +1,9 @@
 from discord.ext import commands, tasks
+from discord.utils import get
 from logging import getLogger
 
 from playlist_watch.spotify.get_playlist_tracks import get_recent_tracks
-from playlist_watch.system.manage_playlists_json import get_playlists
+from playlist_watch.system.manage_playlists_json import get_playlists, update_channel_id
 
 logger = getLogger(__name__)
 
@@ -20,11 +21,9 @@ class PlaylistCheck(commands.Cog):
         logger.info("Checking playlists...")
         playlists = get_playlists()
         for playlist_id, playlist_info in playlists.items():
-            channel_id = playlist_info.get("channel_id", None)
-            channel = self.bot.get_channel(channel_id)
-            if not channel:
-                logger.error(f"Channel not found: {channel_id}")
-                raise ValueError(f"Channel not found: {channel_id}")    
+            channel = self.get_channel(playlist_id=playlist_id, playlist_info=playlist_info)
+            if channel is None:
+                continue
             logger.info(f"Checking playlist {playlist_info["name"]}...")
             recent_tracks = await get_recent_tracks(playlist_id=playlist_id, time_delay_hours=time_delay_hours)
             if recent_tracks == "":
@@ -32,6 +31,22 @@ class PlaylistCheck(commands.Cog):
                 continue
             logger.info("Sending recent tracks message...")
             await self.send_long_message(channel, recent_tracks)
+
+    def get_channel(self, playlist_id: str, playlist_info: dict):
+        channel_id = playlist_info.get("channel_id", None)
+        channel = self.bot.get_channel(channel_id)
+
+        if not channel:
+            logger.error(f"Channel not found: {channel_id} - Attempting to find channel by name...")
+            channel_name = playlist_info.get("name")
+            channel = get(self.bot.get_all_channels(), name=channel_name)
+            if not channel:
+                logger.error(f"Could not find channel {channel_name}, skipping playlist {playlist_id}...")
+                return None
+            updated_channel_id = channel.id
+            update_channel_id(playlist_id=playlist_id, channel_id=updated_channel_id)
+
+        return channel
 
     @check_playlist.before_loop
     async def before_my_task(self):
